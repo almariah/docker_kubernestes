@@ -95,7 +95,9 @@ Here is a nice example about shred IPC https://github.com/allingeek/ch6_ipc
 * Not used in Docker (but definitely the cgroups itself is used)
 
 ### User ID (user)
-* Security improvement but has some limitation
+* user namespace support enables a process (that belong to specific user namespace) to have a unique range of user and group IDs which are outside the traditional user and group range utilized by the host system.
+* User namespaces are an advanced feature and require coordination with other capabilities.
+* Provides a better isolation and security but has some limitation
 * Not used in Docker by default
 
 ## What is Docker Engine?
