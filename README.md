@@ -123,7 +123,7 @@ getcap /usr/bin/ping
 * User namespace could also be enabled.
 
 
-## Example:
+## Example: Containers without docker!
 
 ![alt text](NS-intro.png)
 
@@ -154,6 +154,7 @@ mount -t proc none /proc
 mount -t sysfs none /sys
 mount -t tmpfs none /tmp
 ```
+Now you can check the PIDs, it similar to the one you find inside any docker container.
 
 Then cgroups will be used to limit the memory usage. Create a new cgroup:
 ```bash
