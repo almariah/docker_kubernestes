@@ -106,6 +106,19 @@ Here is a nice example about shred IPC https://github.com/allingeek/ch6_ipc
 
 * The default container format is libcontainer. In the future, Docker may support other container formats by integrating with technologies such as BSD Jails or Solaris Zones.
 
+### Security:
+Docker Engine makes use of:
+
+* AppArmor a Linux kernel security module allows to restrict programs capabilities with per-program profiles.
+
+* Seccomp used for filtering syscalls issued by a program. seccomp allows a process to make a one-way transition into a "secure" state where it cannot make any system calls except exit(), sigreturn(), read() and write() to already-open file descriptors.
+
+* Capabilties provide fine-grained control over superuser permissions, allowing use of the root user to be avoided. For example:
+```bash
+getcap /usr/bin/ping
+```
+
+* User namespace could also be enabled.
 
 
 ## Example:
@@ -127,9 +140,11 @@ ip netns add net_demo
 
 Use `unshare` (wrapper in util-linux to call `unshare` syscall) to run bash in chroot environment and new namespaces:
 ```bash
+# with new user namespace and mapping root user with less privileged access
 unshare --mount --uts --ipc --net=/var/run/netns/net_demo --pid --fork --user --map-root-user chroot go_root /bin/bash
 
-unshare --mount --uts --ipc --net=/var/run/netns/net_demo --pid --fork --setgroups=allow  chroot go_root /bin/bash
+# without user namespace
+unshare --mount --uts --ipc --net=/var/run/netns/net_demo --pid --fork --setgroups=allow chroot go_root /bin/bash
 # inside the container
 mount -t proc none /proc
 mount -t sysfs none /sys
@@ -154,7 +169,11 @@ Add it to demo cgroup:
 echo <PID> > /sys/fs/cgroup/memory/demo/tasks
 ```
 
+Adding capabilities to allow creation of `/dev/urandom` (special file for pseudorandom number generators):
+```bash
+setcap CAP_MKNOD=+eip go_root/bin/mknod
 mknod -m 644 /dev/urandom c 1 9
+```
 
 Test the memory limit using this python code:
 ```python
@@ -168,7 +187,8 @@ while True:
     print "%dmb" % (i*10)
 ```
 
-
+Configure network namespace and add interfaces:
+```bash
 ip link add veth1 type veth peer name eth0
 ip link set eth0 netns net_demo
 ip addr add 172.16.99.1/24 dev veth1
@@ -177,6 +197,10 @@ ip netns exec net_demo ip addr add 172.16.99.100/24 dev eth0
 ip netns exec net_demo ip link set lo up
 ip netns exec net_demo ip link set eth0 up
 ip netns exec net_demo ip route add default via 172.16.99.1
+```
+
+Enable IP forwarding and forward virtual inrerface traffic:
+```bash
 echo 1 > /proc/sys/net/ipv4/ip_forward
 iptables -P FORWARD DROP
 iptables -F FORWARD
@@ -184,17 +208,11 @@ iptables -t nat -F
 iptables -t nat -A POSTROUTING -s 172.16.99.100/24 -o ens3 -j MASQUERADE
 iptables -A FORWARD -i ens3 -o veth1 -j ACCEPT
 iptables -A FORWARD -o ens3 -i veth1 -j ACCEPT
+```
+Finally test using `ping`
 
 To clean the network namespace:
 ```bash
 umount /run/netns/net_demo
 ip netns del net_demo
 ```
-
-capabilities
-
-
-sudo cgcreate -a bork -g memory:mycoolgrou
-
-
-sudo setcap CAP_MKNOD=ep /home/user/rsync
