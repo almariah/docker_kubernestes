@@ -1,5 +1,39 @@
 # Introduction to Docker and Kubernetes
 
+## What is cgroups?
+
+cgroups is a Linux kernel feature that limits, accounts for, and isolates the resource usage (CPU, memory, disk I/O, network, etc.) of a collection of processes.
+
+* they are hierarchical (set of subsystems mounted together.)
+* child cgroups inherit certain attributes from their parent cgroup.
+* the actual resource tracking and limits are implemented by subsystems.
+
+### Subsystems:
+* blkio — this subsystem sets limits on input/output access to and from block devices such as physical drives (disk, solid state, or USB).
+
+* cpu — this subsystem uses the scheduler to provide cgroup tasks access to the CPU.
+
+* cpuacct — this subsystem generates automatic reports on CPU resources used by tasks in a cgroup.
+
+* cpuset — this subsystem assigns individual CPUs (on a multicore system) and memory nodes to tasks in a cgroup.
+
+* devices — this subsystem allows or denies access to devices by tasks in a cgroup.
+
+* devices — this subsystem allows or denies access to devices by tasks in a cgroup.
+
+* memory — this subsystem sets limits on memory use by tasks in a cgroup and generates automatic reports on memory resources used by those tasks.
+
+* net_cls — this subsystem tags network packets with a class identifier (classid) that allows the Linux traffic controller (tc) to identify packets originating from a particular cgroup task.
+
+* net_prio — this subsystem provides a way to dynamically set the priority of network traffic per network interface.
+
+* ns — the namespace subsystem.
+
+* perf_event — enables per-cpu mode to monitor only threads in certain cgroups.
+
+## What is Union file systems?
+
+Union file systems, or UnionFS, are file systems that operate by creating layers, making them very lightweight and fast. Docker Engine uses UnionFS to provide the building blocks for containers. Docker Engine can use multiple UnionFS variants, including AUFS, btrfs, vfs, and DeviceMapper.
 
 ## What is Namespaces?
 
@@ -24,19 +58,22 @@ ls -l /proc/<PID>/ns/
 ### Mount (mnt):
 * Mount namespaces provide isolation of the list of mount points seen by the processes in each namespace instance.
 * the processes in each of the mount namespace instances will see distinct single-directory hierarchies.
-* /proc/<PID>/mountinfo provide info about mnt namespace
+* /proc/PID/mountinfo provide info about mnt namespace
+* Used in Docker by default
 
 ### Process ID (PID):
 * Provides processes with an independent set of process IDs (PIDs) from other namespaces.
 * The first process created in a PID namespace is assigned the process id number 1 and receives most of the same special treatment as the normal init process.
 * termination of this PID 1 process will immediately terminate all processes in its PID namespace and any descendants.
 * initial PID namespace is able to see all processes, although with different PIDs than other namespaces will see processes with.
+* Used in Docker by default
 
 ### Network (net):
 * Network namespaces virtualize the network stack.
 * On creation it contains only a loopback interface.
 * Each network interface (physical or virtual) is present in exactly 1 namespace and can be moved between namespaces.
 * Each namespace will have a private set of IP addresses, its own routing table, socket listing, connection tracking table, firewall, and other network-related resources.
+* Used in Docker by default
 
 ### Interprocess Communication (ipc):
 
@@ -50,13 +87,28 @@ Here is a nice example about shred IPC https://github.com/allingeek/ch6_ipc
 
 
 ### UTS
+* UTS namespaces allow a single system to appear to have different host and domain names to different processes.
+* By default, all containers have their own UTS namespace.
 
 ### Control group (cgroup)
+* The cgroup namespace hides the identity of the control group of which process is a member.
+* Not used in Docker (but definitely the cgroups itself is used)
 
 ### User ID (user)
+* Security improvement but has some limitation
+* Not used in Docker by default
+
+## What is Docker Engine?
+
+![alt text](format.png)
+
+* Docker Engine combines the namespaces, control groups, and UnionFS into a wrapper called a container format.
+
+* The default container format is libcontainer. In the future, Docker may support other container formats by integrating with technologies such as BSD Jails or Solaris Zones.
 
 
-### Example:
+
+## Example:
 
 ![alt text](NS-intro.png)
 
