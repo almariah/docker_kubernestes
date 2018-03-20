@@ -1,4 +1,4 @@
-# Introduction to Docker and Kubernetes
+# Introduction to Docker Internals
 
 ## What is cgroups?
 
