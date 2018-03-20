@@ -57,3 +57,43 @@ IPC namespaces isolate processes from SysV style inter-process communication. Th
 ### User ID (user)
 
 ### Control group (cgroup)
+
+### Example:
+
+![alt text](NS-intro.png)
+
+docker run -id golang bash
+docker export <ID> -o go_root.tar
+mkdir go_root
+tar xf go_root.tar --ignore-command-error -C go_root/
+ip netns add test_net
+=/var/run/netns/test_net
+unshare --mount --uts --ipc --net --pid --fork --user --mount-proc --map-root-user chroot go_root bash
+mount -t proc none /proc
+mount -t sysfs none /sys
+mount -t tmpfs none /tmp
+
+
+
+ip link add veth0 type veth peer name eth0
+ip link set eth0 netns test_net
+ip addr add 172.16.99.1/24 dev veth0
+ip link set veth0 up
+ip netns exec test_net ip addr add 172.16.99.100/24 dev eth0
+ip netns exec test_net ip link set lo up
+ip netns exec test_net ip link set eth0 up
+ip netns exec test_net ip route add default via 172.16.99.1
+
+
+echo 1 > /proc/sys/net/ipv4/ip_forward
+iptables -P FORWARD DROP
+iptables -F FORWARD
+iptables -t nat -F
+iptables -t nat -A POSTROUTING -s 172.16.99.100/24 -o ens3 -j MASQUERADE
+iptables -A FORWARD -i ens3 -o veth0 -j ACCEPT
+iptables -A FORWARD -o ens3 -i veth0 -j ACCEPT
+
+to clean
+
+umount /run/netns/test_net
+ip netns del test_net
