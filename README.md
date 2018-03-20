@@ -218,3 +218,8 @@ To clean the network namespace:
 umount /run/netns/net_demo
 ip netns del net_demo
 ```
+
+To test mnt:
+```
+mount --bind -o ro volume go_root/var/readonlyfiles/
+``
