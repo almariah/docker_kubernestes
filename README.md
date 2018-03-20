@@ -127,7 +127,9 @@ getcap /usr/bin/ping
 
 ![alt text](NS-intro.png)
 
-First create a docker container and extract its content to local directory:
+The following example explains the previous concepts. You will be able to implement a container (similiar to docker container) without using any docker platform. 
+
+First we need a root filesystem. The easiest way is to run a docker container and extract its content to local directory:
 ```bash
 docker run -id golang bash
 docker export <ID> -o go_root.tar
